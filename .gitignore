@@ -1,0 +1,21 @@
+/node_modules
+/public/uploads/*
+/public/uploads/profile/*
+/public/uploads/order/*
+/public/uploads/job-vacancy/*
+/public/files/epod/*
+/public/files/rts/*
+/public/files/invoice/*
+/public/files/truck/*
+package-lock.json
+.env
+
+/public/files/.DS_Store
+/src/.DS_Store
+.DS_Store
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/config.yml
+!.elasticbeanstalk/*.global.yml
+!.elasticbeanstalk/config.yml
