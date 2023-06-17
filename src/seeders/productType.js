@@ -1,17 +1,22 @@
 module.exports = [
 	{
-		"name": "Appetizer"
+		_id: '6489ba0ab36ec5d064b36bc5',
+		name: 'Dessert',
 	},
 	{
-		"name": "Salad"
+		_id: '6489ba0ab36ec5d064b36bc4',
+		name: 'Main Course',
 	},
 	{
-		"name": "Soup"
+		_id: '6489ba0ab36ec5d064b36bc3',
+		name: 'Soup',
 	},
 	{
-		"name": "Main Course"
+		_id: '6489ba0ab36ec5d064b36bc2',
+		name: 'Salad',
 	},
 	{
-		"name": "Dessert"
-	}
+		_id: '6489ba0ab36ec5d064b36bc1',
+		name: 'Appetizer',
+	},
 ]

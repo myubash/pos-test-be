@@ -24,4 +24,4 @@ ModelSchema.pre([
 	}
 })
 
-module.exports = mongoose.model('ProductType', ModelSchema)
+module.exports = mongoose.model('Measurement', ModelSchema)

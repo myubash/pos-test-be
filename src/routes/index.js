@@ -16,6 +16,7 @@ const {
 const SeederController = require('../controllers/SeederController')
 const AuthController = require('../controllers/AuthController')
 const EmployeeController = require('../controllers/EmployeeController')
+const MenuController = require('../controllers/MenuController')
 
 module.exports = function routes(app) {
 	app.use('/api', router)
@@ -41,4 +42,10 @@ module.exports = function routes(app) {
 	router.get('/employee', EmployeeController.getAll)
 	router.get('/employee/:id', EmployeeController.getOne)
 	router.put('/employee/:id/update', EmployeeController.update)
+
+  // menu
+  router.post('/menu/create', MenuController.create)
+	// router.get('/menu', MenuController.getAll)
+	// router.get('/menu/:id', MenuController.getOne)
+	// router.put('/menu/:id/update', MenuController.update)
 }
