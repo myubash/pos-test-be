@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const bcrypt = require('bcryptjs')
+const path = require('path')
 const { isObject, isArray } = require('lodash')
 const {
 	_setting,
@@ -14,30 +14,58 @@ const {
 } = require('../utils')
 const validation = require('./Validator/MenuValidation')
 
+const menuDirectory = path.join(__dirname, '../../public/uploads/menu')
+
 exports.create = async (req, res) => {
 	const { user } = req.headers.tokenDecoded
 	const {
 		name,
-    type,
-    price,
-    description,
-    photos,
-    ingredients,
+		type,
+		price,
+		description,
+		photos,
+		ingredients,
 	} = req.body
 	try {
 		await validation.create.validate(req.body)
+
+		if (isArray(ingredients) && ingredients.length > 0) {
+			// check unit
+			for (let i = 0; i < ingredients.length; i += 1) {
+				const { unit } = ingredients[i]
+				if (unit) {
+					// check if type objectid
+					if (!mongoose.isValidObjectId(unit)) return res.status(400).json({ message: 'Unit is not valid' })
+				}
+			}
+		}
 
 		const form = {
 			...req.body,
 			createdBy: user._id,
 		}
-    console.log(form)
+		console.log(form)
 		// const menu = await new Menu(form).save()
 
 		return res.status(200).json({ message: 'success', data: 'menu' })
 	}
 	catch (error) {
 		return res.status(400).json({ message: error.message })
+	}
+}
+
+exports.getMenuPhoto = async (req, res) => {
+	try {
+		const { filename } = req.params
+		const filedir = {
+			root: menuDirectory,
+		}
+		return res.status(200).sendFile(filename, filedir, (err) => {
+			if (err) res.return(400).json({ message: err.message })
+		})
+	}
+	catch (error) {
+		return res.return(400).json({ message: error.message })
 	}
 }
 
@@ -132,9 +160,8 @@ exports.update = async (req, res) => {
 				},
 			]
 		}
-    console.log(form)
+		console.log(form)
 		const employee = await Object.assign(_employee, form).save()
-
 
 		return res.status(200).json({ message: 'Employee updated', data: employee })
 	}

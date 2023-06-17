@@ -12,7 +12,7 @@ const ModelSchema = Schema({
 		{
 			name: { Type: String },
 			amount: { Type: Number },
-			unit: { Type: String },
+			unit: { type: mongoose.Types.ObjectId, ref: 'Measurement' },
 		},
 	],
 	status: { type: String },

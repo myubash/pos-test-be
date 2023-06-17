@@ -2,8 +2,8 @@
 const express = require('express')
 
 const router = express.Router()
-// const path = require('path')
-// const multer = require('multer')
+const fs = require('fs')
+const multer = require('multer')
 // const {
 // 	_role,
 // 	_permissionModule: pm,
@@ -17,6 +17,32 @@ const SeederController = require('../controllers/SeederController')
 const AuthController = require('../controllers/AuthController')
 const EmployeeController = require('../controllers/EmployeeController')
 const MenuController = require('../controllers/MenuController')
+const FileController = require('../controllers/FileController')
+
+// Upload File User
+function storage(pathdocument) {
+	return multer.diskStorage({
+		destination: (req, file, cb) => {
+			const _path = `public/${pathdocument}`
+			fs.mkdirSync(_path, { recursive: true })
+			return cb(null, _path)
+		},
+		filename: (req, file, cb) => {
+			cb(null, file.originalname)
+		},
+	})
+}
+
+let fileUploadMenu = multer({ storage: storage('uploads/menu') })
+
+// // dokumen
+// const fileUpload = uploadDokumen.fields([
+// 	{ name: 'images' },
+// ])
+
+fileUploadMenu = fileUploadMenu.fields([
+	{ name: 'images' },
+])
 
 module.exports = function routes(app) {
 	app.use('/api', router)
@@ -43,9 +69,11 @@ module.exports = function routes(app) {
 	router.get('/employee/:id', EmployeeController.getOne)
 	router.put('/employee/:id/update', EmployeeController.update)
 
-  // menu
-  router.post('/menu/create', MenuController.create)
+	// menu
+	router.post('/menu/create', MenuController.create)
+	router.post('/menu/upload', fileUploadMenu, FileController.uploadFiles)
 	// router.get('/menu', MenuController.getAll)
 	// router.get('/menu/:id', MenuController.getOne)
 	// router.put('/menu/:id/update', MenuController.update)
+	router.get('/menu/photo/:filename', MenuController.getMenuPhoto)
 }
