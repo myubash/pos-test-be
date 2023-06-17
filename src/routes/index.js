@@ -1,5 +1,6 @@
 /* eslint-disable func-names */
 const express = require('express')
+const path = require('path')
 
 const router = express.Router()
 const fs = require('fs')
@@ -20,7 +21,7 @@ const MenuController = require('../controllers/MenuController')
 const FileController = require('../controllers/FileController')
 
 // Upload File User
-function storage(pathdocument) {
+function storage(pathdocument, name = '') {
 	return multer.diskStorage({
 		destination: (req, file, cb) => {
 			const _path = `public/${pathdocument}`
@@ -28,12 +29,13 @@ function storage(pathdocument) {
 			return cb(null, _path)
 		},
 		filename: (req, file, cb) => {
-			cb(null, file.originalname)
+			const { filename = true } = req.params
+			cb(null, filename ? `${Date.now()}-${file.fieldname}${path.extname(file.originalname)}` : file.originalname)
 		},
 	})
 }
 
-let fileUploadMenu = multer({ storage: storage('uploads/menu') })
+let fileUploadMenu = multer({ storage: storage('menu/photo') })
 
 // // dokumen
 // const fileUpload = uploadDokumen.fields([
@@ -71,9 +73,9 @@ module.exports = function routes(app) {
 
 	// menu
 	router.post('/menu/create', MenuController.create)
-	router.post('/menu/upload', fileUploadMenu, FileController.uploadFiles)
 	// router.get('/menu', MenuController.getAll)
 	// router.get('/menu/:id', MenuController.getOne)
 	// router.put('/menu/:id/update', MenuController.update)
-	router.get('/menu/photo/:filename', MenuController.getMenuPhoto)
+	router.post('/menu/upload', fileUploadMenu, FileController.uploadFiles)
+	// router.get('/menu/photo/:filename', MenuController.getMenuPhoto) // too secure
 }

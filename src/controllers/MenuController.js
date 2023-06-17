@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const path = require('path')
+const fs = require('fs')
 const { isObject, isArray } = require('lodash')
 const {
 	_setting,
@@ -19,10 +20,6 @@ const menuDirectory = path.join(__dirname, '../../public/uploads/menu')
 exports.create = async (req, res) => {
 	const { user } = req.headers.tokenDecoded
 	const {
-		name,
-		type,
-		price,
-		description,
 		photos,
 		ingredients,
 	} = req.body
@@ -40,14 +37,21 @@ exports.create = async (req, res) => {
 			}
 		}
 
+		if (isArray(photos) && photos.length > 0) {
+			for (let i = 0; i < photos.length; i += 1) {
+				const isExists = fs.existsSync(`public/${photos[i]}`)
+				if (!isExists) return res.status(400).json({ message: `File ${photos[i]} not exists, please reupload` })
+			}
+		}
+
 		const form = {
 			...req.body,
 			createdBy: user._id,
 		}
 		console.log(form)
-		// const menu = await new Menu(form).save()
+		const menu = await new Menu(form).save()
 
-		return res.status(200).json({ message: 'success', data: 'menu' })
+		return res.status(200).json({ message: 'success', data: menu })
 	}
 	catch (error) {
 		return res.status(400).json({ message: error.message })
@@ -60,8 +64,9 @@ exports.getMenuPhoto = async (req, res) => {
 		const filedir = {
 			root: menuDirectory,
 		}
+		console.log('jajang')
 		return res.status(200).sendFile(filename, filedir, (err) => {
-			if (err) res.return(400).json({ message: err.message })
+			if (err) res.status(400).json({ message: err.message })
 		})
 	}
 	catch (error) {

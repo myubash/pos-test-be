@@ -12,7 +12,11 @@ exports.create = yup.object({
 	description: yup
 		.string(),
 	photos: yup
-		.string(),
+		.array()
+		.of(
+			yup
+				.string(),
+		),
 	ingredients: yup
 		.array()
 		.of(
