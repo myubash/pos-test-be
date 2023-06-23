@@ -1,12 +1,11 @@
 const mongoose = require('mongoose')
 const path = require('path')
 const fs = require('fs')
-const { isObject, isArray } = require('lodash')
+const { isArray } = require('lodash')
 const {
-	_setting,
+	_status,
 } = require('../constants')
 const {
-	User,
 	Menu,
 } = require('../models')
 
@@ -46,10 +45,65 @@ exports.create = async (req, res) => {
 
 		const form = {
 			...req.body,
-			createdBy: user._id,
+			..._status.menu.draft,
+			user: user._id,
+			currentUser: user._id,
 		}
-		console.log(form)
-		const menu = await new Menu(form).save()
+
+		const menu = await Menu.create(form)
+
+		return res.status(200).json({ message: 'success', data: menu })
+	}
+	catch (error) {
+		return res.status(400).json({ message: error.message })
+	}
+}
+
+exports.update = async (req, res) => {
+	const { user } = req.headers.tokenDecoded
+	const { id: menu_id } = req.params
+	const {
+		photos,
+		ingredients,
+	} = req.body
+	try {
+		await validation.update.validate(req.body)
+		const _menu = await Menu.findOne({
+			_id: menu_id,
+			statusCode: {
+				$nin: [
+					_status.menu.delete.statusCode,
+					_status.menu.reject.statusCode,
+				],
+			},
+		})
+		if (!_menu) return res.status(400).json({ message: 'Menu not found' })
+
+		if (isArray(ingredients) && ingredients.length > 0) {
+			// check unit
+			for (let i = 0; i < ingredients.length; i += 1) {
+				const { unit } = ingredients[i]
+				if (unit) {
+					// check if type objectid
+					if (!mongoose.isValidObjectId(unit)) return res.status(400).json({ message: 'Unit is not valid' })
+				}
+			}
+		}
+
+		if (isArray(photos) && photos.length > 0) {
+			for (let i = 0; i < photos.length; i += 1) {
+				const isExists = fs.existsSync(`public/${photos[i]}`)
+				if (!isExists) return res.status(400).json({ message: `File ${photos[i]} not exists, please reupload` })
+			}
+		}
+
+		const form = {
+			...req.body,
+			..._status.menu.update,
+			currentUser: user._id,
+		}
+
+		const menu = await Object.assign(_menu, form).save()
 
 		return res.status(200).json({ message: 'success', data: menu })
 	}
@@ -64,7 +118,7 @@ exports.getMenuPhoto = async (req, res) => {
 		const filedir = {
 			root: menuDirectory,
 		}
-		console.log('jajang')
+
 		return res.status(200).sendFile(filename, filedir, (err) => {
 			if (err) res.status(400).json({ message: err.message })
 		})
@@ -87,11 +141,20 @@ exports.getAll = async (req, res) => {
 			deleted: false,
 		}
 
-		const data = await Employee.find(condition)
+		const data = await Menu.find(condition)
 			.sort(sortedLk)
 			.skip(pageSize * page)
 			.limit(pageSize)
-			.populate('managedBy')
+			.populate('type', ['name'])
+			.populate({
+				path: 'user',
+				select: ['username', 'employee'],
+				populate: {
+					path: 'employee',
+					select: ['fullName'],
+				},
+			})
+			.populate('statusHistory.user', ['username', 'fullName', 'role'])
 
 		return res.status(200).json({ message: 'success', data })
 	}
@@ -101,10 +164,24 @@ exports.getAll = async (req, res) => {
 }
 
 exports.getOne = async (req, res) => {
-	const { id } = req.params
+	const { id: menu_id } = req.params
 	try {
-		const data = await Employee.findOne({ _id: id })
-			.populate('managedBy')
+		const data = await Menu.findOne({
+			_id: menu_id,
+			deleted: false,
+		})
+			.populate('type', ['name'])
+			.populate({
+				path: 'user',
+				select: ['username', 'employee'],
+				populate: {
+					path: 'employee',
+					select: ['fullName'],
+				},
+			})
+			.populate('statusHistory.user', ['username', 'fullName', 'role'])
+
+		if (!data) return res.status(404).json({ message: 'Menu not found' })
 
 		return res.status(200).json({ message: 'success', data })
 	}
@@ -113,82 +190,77 @@ exports.getOne = async (req, res) => {
 	}
 }
 
-function compareDiffOnly(original, copy) {
-	let r = null
-	for (const [k, v] of Object.entries(original)) {
-		if (typeof v === 'object' && v !== null && !(v instanceof Date) && !(mongoose.isValidObjectId(v)) && !isArray(v)) {
-			if (!copy.hasOwnProperty(k)) {
-				r[k] = v
-			}
-			else {
-				compareDiffOnly(v, copy[k])
-			}
-		}
-		else if (!Object.is(v, copy[k]) && copy[k]) {
-			if (!r) r = {}
-			r[k] = v
-		}
-	}
-	return r
-}
-
-exports.update = async (req, res) => {
-	const {
-		email, phone, managedBy,
-	} = req.body
-	const { id: employee_id } = req.params
+exports.delete = async (req, res) => {
+	const { user } = req.headers.tokenDecoded
+	const { menu_id, note } = req.body
 	try {
-		if (!employee_id) return res.status(404).json({ message: 'Employee id not found' })
+		const _menu = await Menu.findById(menu_id)
 
-		const _employee = await Employee.findById(employee_id)
-		if (!_employee) return res.status(404).json({ message: 'Employee not found' })
-
-		if (email) await validation.checkEmail.validate(email)
-		if (phone) await validation.checkPhone.validate(phone)
-
-		if (managedBy) {
-			// check if user exists
-			const isUserExists = await User.findById(managedBy)
-			if (!isUserExists) return res.status(404).json({ message: 'User not found' })
-		}
+		if (!_menu) return res.status(404).json({ message: 'Menu not found' })
 
 		const form = {
-			...req.body,
+			deleted: true,
+			currentUser: user._id,
+			note,
+			..._status.menu.delete,
 		}
-		const oldData = compareDiffOnly(_employee._doc, form)
-		if (oldData) {
-			form.updateHistory = [
-				..._employee.updateHistory,
-				{
-					...oldData,
-					createdAt: new Date(),
-				},
-			]
-		}
-		console.log(form)
-		const employee = await Object.assign(_employee, form).save()
 
-		return res.status(200).json({ message: 'Employee updated', data: employee })
+		await Object.assign(_menu, form).save()
+
+		return res.status(200).json({ message: 'Menu deleted', note })
 	}
 	catch (error) {
 		return res.status(400).json({ message: error.message })
 	}
 }
 
-exports.delete = async (req, res) => {
-	const { employee_id } = req.body
+exports.accept = async (req, res) => {
+	const { user } = req.headers.tokenDecoded
+	const { id: menu_id } = req.params
+	const { note } = req.body
 	try {
-		// validate cant delete current user
-		const _user = await User.findById(employee_id)
-		if (_user.employee._id === employee_id) return res.status(400).json({ message: 'Cant delete current employee' })
+		const _menu = await Menu.findOne({
+			_id: menu_id,
+			statusCode: _status.menu.draft.statusCode,
+		})
+		if (!_menu) return res.status(404).json({ message: 'Menu not found' })
 
-		const _employee = await User.findById(employee_id)
+		const form = {
+			note,
+			..._status.menu.accept,
+			acceptedBy: user._id,
+			currentUser: user._id,
+		}
 
-		if (!_employee) return res.status(404).json({ message: 'Employee not found' })
+		const data = await Object.assign(_menu, form).save()
 
-		await Object.assign(_employee, { deleted: true }).save()
+		return res.status(200).json({ message: 'Menu accepted', data })
+	}
+	catch (error) {
+		return res.status(400).json({ message: error.message })
+	}
+}
 
-		return res.status(200).json({ message: 'Employee deleted' })
+exports.reject = async (req, res) => {
+	const { user } = req.headers.tokenDecoded
+	const { id: menu_id } = req.params
+	const { note } = req.body
+	try {
+		const _menu = await Menu.findOne({
+			_id: menu_id,
+			statusCode: _status.menu.draft.statusCode,
+		})
+		if (!_menu) return res.status(404).json({ message: 'Menu not found' })
+
+		const form = {
+			note,
+			..._status.menu.reject,
+			currentUser: user._id,
+		}
+
+		const data = await Object.assign(_menu, form).save()
+
+		return res.status(200).json({ message: 'Menu rejected', data })
 	}
 	catch (error) {
 		return res.status(400).json({ message: error.message })
