@@ -1,10 +1,11 @@
 const mongoose = require('mongoose')
-const path = require('path')
-const fs = require('fs')
+// const path = require('path')
+// const fs = require('fs')
 const { isArray } = require('lodash')
 const moment = require('moment')
 const {
 	_status,
+	_condition,
 } = require('../constants')
 const {
 	Order,
@@ -17,7 +18,7 @@ const {
 } = require('../utils')
 const validation = require('./Validator/OrderValidation')
 
-const menuDirectory = path.join(__dirname, '../../public/uploads/menu')
+// const menuDirectory = path.join(__dirname, '../../public/uploads/menu')
 
 const generateOrderNumber = async () => {
 	const a = moment().format('YYYY-MM-DD 00:00:00')
@@ -272,6 +273,33 @@ exports.getAll = async (req, res) => {
 	try {
 		const condition = {
 			...filteredLk,
+			deleted: false,
+		}
+
+		const data = await Order.find(condition)
+			.sort(sortedLk)
+			.skip(pageSize * page)
+			.limit(pageSize)
+			.populate('statusHistory.user', ['username', 'fullName', 'role'])
+
+		return res.status(200).json({ message: 'success', data })
+	}
+	catch (error) {
+		return res.status(400).json({ message: error.message })
+	}
+}
+
+exports.getAllForKitchen = async (req, res) => {
+	const {
+		page,
+		pageSize,
+		filteredLk,
+		sortedLk,
+	} = await getQuery(req.query, true)
+	try {
+		const condition = {
+			...filteredLk,
+			..._condition.order.kitchen,
 			deleted: false,
 		}
 

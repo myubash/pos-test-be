@@ -75,7 +75,7 @@ module.exports = function routes(app) {
 	router.get('/employee/:id', EmployeeController.getOne)
 	router.put('/employee/:id/update', EmployeeController.update)
 
-  // product type
+	// product type
 	router.post('/product-type/create', ProductTypeController.create)
 	router.get('/product-type', ProductTypeController.getAll)
 	router.get('/product-type/:id', ProductTypeController.getOne)
@@ -96,6 +96,7 @@ module.exports = function routes(app) {
 	// order
 	router.post('/order/create', OrderController.create)
 	router.get('/order', OrderController.getAll)
+	router.get('/order-kitchen', OrderController.getAllForKitchen)
 	router.get('/order/:id', OrderController.getOne)
 	router.put('/order/:id/update', OrderController.update)
 	router.delete('/order/delete', OrderController.delete)
