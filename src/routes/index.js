@@ -97,9 +97,12 @@ module.exports = function routes(app) {
 	router.post('/order/create', OrderController.create)
 	router.get('/order', OrderController.getAll)
 	router.get('/order-kitchen', OrderController.getAllForKitchen)
+	router.get('/order-cashier', OrderController.getAllForCashier)
 	router.get('/order/:id', OrderController.getOne)
 	router.put('/order/:id/update', OrderController.update)
 	router.delete('/order/delete', OrderController.delete)
 	router.post('/order/upload', fileUploadMenu, FileController.uploadFiles)
-	// router.get('/order/photo/:filename', OrderController.getMenuPhoto) // too secure
+	router.put('/order/:id/done', OrderController.done)
+	router.put('/order/:id/process', OrderController.process)
+	router.put('/order/:id/cancel', OrderController.cancel)
 }

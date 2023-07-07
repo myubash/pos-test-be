@@ -161,7 +161,7 @@ exports.process = async (req, res) => {
 		await validation.update.validate(req.body)
 		const _order = await Order.findOne({
 			_id: order_id,
-			statusCode: _status.order.create,
+			statusCode: _status.order.create.statusCode,
 		})
 		if (!_order) return res.status(400).json({ message: 'Order not found' })
 
@@ -190,7 +190,7 @@ exports.done = async (req, res) => {
 		await validation.update.validate(req.body)
 		const _order = await Order.findOne({
 			_id: order_id,
-			statusCode: _status.order.process,
+			statusCode: _status.order.process.statusCode,
 		})
 		if (!_order) return res.status(400).json({ message: 'Order not found' })
 
@@ -281,6 +281,7 @@ exports.getAll = async (req, res) => {
 			.skip(pageSize * page)
 			.limit(pageSize)
 			.populate('statusHistory.user', ['username', 'fullName', 'role'])
+			.populate('list.menu', ['name', 'price', 'photos'])
 
 		return res.status(200).json({ message: 'success', data })
 	}
@@ -308,6 +309,35 @@ exports.getAllForKitchen = async (req, res) => {
 			.skip(pageSize * page)
 			.limit(pageSize)
 			.populate('statusHistory.user', ['username', 'fullName', 'role'])
+			.populate('list.menu', ['name', 'price', 'photos'])
+
+		return res.status(200).json({ message: 'success', data })
+	}
+	catch (error) {
+		return res.status(400).json({ message: error.message })
+	}
+}
+
+exports.getAllForCashier = async (req, res) => {
+	const {
+		page,
+		pageSize,
+		filteredLk,
+		sortedLk,
+	} = await getQuery(req.query, true)
+	try {
+		const condition = {
+			...filteredLk,
+			statusCode: _status.order.done.statusCode,
+			deleted: false,
+		}
+
+		const data = await Order.find(condition)
+			.sort(sortedLk)
+			.skip(pageSize * page)
+			.limit(pageSize)
+			.populate('statusHistory.user', ['username', 'fullName', 'role'])
+			.populate('list.menu', ['name', 'price', 'photos'])
 
 		return res.status(200).json({ message: 'success', data })
 	}
@@ -353,59 +383,6 @@ exports.delete = async (req, res) => {
 		await Object.assign(_menu, form).save()
 
 		return res.status(200).json({ message: 'Order deleted', note })
-	}
-	catch (error) {
-		return res.status(400).json({ message: error.message })
-	}
-}
-
-exports.accept = async (req, res) => {
-	const { user } = req.headers.tokenDecoded
-	const { id: menu_id } = req.params
-	const { note } = req.body
-	try {
-		const _menu = await Order.findOne({
-			_id: menu_id,
-			statusCode: _status.menu.draft,
-		})
-		if (!_menu) return res.status(404).json({ message: 'Order not found' })
-
-		const form = {
-			note,
-			..._status.menu.accept,
-			acceptedBy: user._id,
-			currentUser: user._id,
-		}
-
-		const data = await Object.assign(_menu, form).save()
-
-		return res.status(200).json({ message: 'Order accepted', data })
-	}
-	catch (error) {
-		return res.status(400).json({ message: error.message })
-	}
-}
-
-exports.reject = async (req, res) => {
-	const { user } = req.headers.tokenDecoded
-	const { id: menu_id } = req.params
-	const { note } = req.body
-	try {
-		const _menu = await Order.findOne({
-			_id: menu_id,
-			statusCode: _status.menu.draft,
-		})
-		if (!_menu) return res.status(404).json({ message: 'Order not found' })
-
-		const form = {
-			note,
-			..._status.menu.reject,
-			currentUser: user._id,
-		}
-
-		const data = await Object.assign(_menu, form).save()
-
-		return res.status(200).json({ message: 'Order rejected', data })
 	}
 	catch (error) {
 		return res.status(400).json({ message: error.message })

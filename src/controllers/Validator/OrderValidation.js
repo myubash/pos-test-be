@@ -46,8 +46,7 @@ exports.create = yup.object({
 
 exports.update = yup.object({
 	table: yup
-		.string()
-		.required(),
+		.string(),
 	note: yup
 		.string(),
 	list: yup
