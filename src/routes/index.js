@@ -22,6 +22,7 @@ const AuthController = require('../controllers/AuthController')
 const EmployeeController = require('../controllers/EmployeeController')
 const MenuController = require('../controllers/MenuController')
 const OrderController = require('../controllers/OrderController')
+const InvoiceController = require('../controllers/InvoiceController')
 
 const FileController = require('../controllers/FileController')
 // Upload File User
@@ -105,4 +106,14 @@ module.exports = function routes(app) {
 	router.put('/order/:id/done', OrderController.done)
 	router.put('/order/:id/process', OrderController.process)
 	router.put('/order/:id/cancel', OrderController.cancel)
+
+	// invoice
+	router.post('/invoice/create', InvoiceController.create)
+	router.get('/invoice', InvoiceController.getAll)
+	router.get('/invoice/:id', InvoiceController.getOne)
+	router.put('/invoice/:id/update', InvoiceController.update)
+	router.delete('/invoice/delete', InvoiceController.delete)
+	router.put('/invoice/:id/done', InvoiceController.done)
+	router.put('/invoice/:id/process', InvoiceController.process)
+	router.put('/invoice/:id/cancel', InvoiceController.cancel)
 }

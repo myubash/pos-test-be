@@ -43,6 +43,28 @@ const _status = {
 			statusCode: 'update',
 		},
 	},
+	invoice: {
+		create: {
+			status: 'Invoice created',
+			statusCode: 'create',
+		},
+		process: {
+			status: 'Processing invoice',
+			statusCode: 'process',
+		},
+		done: {
+			status: 'Invoice done',
+			statusCode: 'done',
+		},
+		cancel: {
+			status: 'Invoice canceled',
+			statusCode: 'cancel',
+		},
+		update: {
+			status: 'Invoice updated',
+			statusCode: 'update',
+		},
+	},
 	orderList: {
 		new: {
 			status: 'New',

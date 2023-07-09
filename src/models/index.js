@@ -6,6 +6,7 @@ const User = require('./User')
 const Employee = require('./Employee')
 const Order = require('./Order')
 const Menu = require('./Menu')
+const Invoice = require('./Invoice')
 
 module.exports = {
 	ProductType,
@@ -15,4 +16,5 @@ module.exports = {
 	Employee,
 	Order,
 	Menu,
+	Invoice,
 }

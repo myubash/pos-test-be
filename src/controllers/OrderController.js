@@ -353,6 +353,7 @@ exports.getOne = async (req, res) => {
 			_id: order_id,
 			deleted: false,
 		})
+			.populate('list.menu', ['name', 'price', 'photos'])
 			.populate('statusHistory.user', ['username', 'fullName', 'role'])
 			.populate('list.statusHistory.user', ['username', 'fullName', 'role'])
 
