@@ -1,15 +1,9 @@
-const mongoose = require('mongoose')
-// const path = require('path')
-// const fs = require('fs')
-const { isArray } = require('lodash')
 const moment = require('moment')
 const {
 	_status,
-	_condition,
 } = require('../constants')
 const {
 	Order,
-	Menu,
 	Invoice,
 } = require('../models')
 
@@ -54,8 +48,17 @@ const generateInvoiceNumber = async () => {
 
 exports.create = async (req, res) => {
 	const { user } = req.headers.tokenDecoded
+	const {
+		order: order_id,
+	} = req.body
 	try {
 		await validation.create.validate(req.body)
+
+		// check order and update status to paid
+		const order = await Order.findOne({ _id: order_id })
+		if (!order) return res.status(400).json({ message: 'Order not found' })
+
+		await Object.assign(order, { ..._status.order.paid }).save()
 
 		const form = {
 			...req.body,
@@ -98,69 +101,6 @@ exports.update = async (req, res) => {
 		const menu = await Object.assign(_invoice, form).save()
 
 		return res.status(200).json({ message: 'success', data: menu })
-	}
-	catch (error) {
-		return res.status(400).json({ message: error.message })
-	}
-}
-
-exports.process = async (req, res) => {
-	const { user } = req.headers.tokenDecoded
-	const { id: invoice_id } = req.params
-	const {
-		note,
-	} = req.body
-	try {
-		await validation.update.validate(req.body)
-		const _order = await Order.findOne({
-			_id: invoice_id,
-			statusCode: _status.invoice.create.statusCode,
-		})
-		if (!_order) return res.status(400).json({ message: 'Order not found' })
-
-		const form = {
-			note,
-			..._status.invoice.process,
-			currentUser: user._id,
-		}
-
-		const invoice = await Object.assign(_order, form).save()
-
-		return res.status(200).json({ message: 'success', data: invoice })
-	}
-	catch (error) {
-		return res.status(400).json({ message: error.message })
-	}
-}
-
-exports.done = async (req, res) => {
-	const { user } = req.headers.tokenDecoded
-	const { id: invoice_id } = req.params
-	const {
-		note,
-	} = req.body
-	try {
-		await validation.update.validate(req.body)
-		const _invoice = await Invoice.findOne({
-			_id: invoice_id,
-			statusCode: {
-				$in: [
-					_status.invoice.create.statusCode,
-					_status.invoice.process.statusCode,
-				],
-			},
-		})
-		if (!_invoice) return res.status(400).json({ message: 'Invoice not found' })
-
-		const form = {
-			note,
-			..._status.invoice.done,
-			currentUser: user._id,
-		}
-
-		const invoice = await Object.assign(_invoice, form).save()
-
-		return res.status(200).json({ message: 'success', data: invoice })
 	}
 	catch (error) {
 		return res.status(400).json({ message: error.message })

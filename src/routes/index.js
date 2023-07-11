@@ -113,7 +113,5 @@ module.exports = function routes(app) {
 	router.get('/invoice/:id', InvoiceController.getOne)
 	router.put('/invoice/:id/update', InvoiceController.update)
 	router.delete('/invoice/delete', InvoiceController.delete)
-	router.put('/invoice/:id/done', InvoiceController.done)
-	router.put('/invoice/:id/process', InvoiceController.process)
 	router.put('/invoice/:id/cancel', InvoiceController.cancel)
 }

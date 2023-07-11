@@ -34,6 +34,10 @@ const _status = {
 			status: 'Order done',
 			statusCode: 'done',
 		},
+		paid: {
+			status: 'Order paid',
+			statusCode: 'paid',
+		},
 		cancel: {
 			status: 'Order canceled',
 			statusCode: 'cancel',
