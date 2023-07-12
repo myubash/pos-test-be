@@ -22,7 +22,7 @@ const port = process.env.PORT || 2000
 
 // DB Config
 const config = require('./src/serverConfig/config.js')
-const _setting = require('./src/constants/setting')
+const _setting = require('./src/constants/setting.js')
 
 const { db } = config
 
@@ -38,7 +38,7 @@ mongoose
 
 
 // Require routes
-require('./src/routes')(app)
+require('./src/routes/index.js')(app)
 
 app.get('/', (req, res) => {
 	res.send(`Simple POS: ${process.env.NODE_ENV[1]}`)
