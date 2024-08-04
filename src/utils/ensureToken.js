@@ -1,9 +1,10 @@
 /* eslint-disable consistent-return */
 /* eslint-disable no-else-return */
 const jwt = require('jsonwebtoken')
-// const { find } = require('lodash')
+const { find } = require('lodash')
 const { User } = require('../models')
 const _setting = require('../constants/setting')
+const _staticToken = require('../constants/staticToken.js')
 
 const EnsureToken = async (req, res, next) => {
 	const token = req.headers.Authorization
@@ -69,16 +70,16 @@ const EnsureToken = async (req, res, next) => {
 	// static token
 	else if (token && token.length === 32) {
 		// console.log('masuk static')
-		// const isRegisteredToken = find(_staticToken, ['token', token])
-		// if (isRegisteredToken) {
-		// 	const user = await checkUser(isRegisteredToken.userId)
-		// 	// if everything is good, save to request for use in other routes
-		// 	req.headers.tokenDecoded = { user }
-		// 	return next()
-		// }
-		// else {
-		// 	return res.status(401).json({ message: 'Token tidak terdaftar' })
-		// }
+		const isRegisteredToken = find(_staticToken, ['token', token])
+		if (isRegisteredToken) {
+			const user = await checkUser(isRegisteredToken.userId)
+			// if everything is good, save to request for use in other routes
+			req.headers.tokenDecoded = { user }
+			return next()
+		}
+		else {
+			return res.status(401).json({ message: 'Token tidak terdaftar' })
+		}
 	}
 	else {
 		// if there is no token
